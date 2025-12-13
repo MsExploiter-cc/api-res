@@ -1,0 +1,48 @@
+name: MS WEB
+
+permissions:
+  contents: write
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  run-node-tunnel:
+    runs-on: ubuntu-latest
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+      GITHUB_REPO: ms-nicky/anime-db
+
+  
+    steps:
+      - name: Setup Node.js v22
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+
+      - name: Extract api.zip
+        run: unzip -o api.zip -d ./api
+
+      - name: Install dependencies
+        working-directory: ./api
+        run: npm install
+
+      - name: Start Node.js app
+        working-directory: ./api
+        run: |
+          npm start &
+          sleep 5
+
+      - name: Install cloudflared
+        run: |
+          wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          sudo dpkg -i cloudflared-linux-amd64.deb || sudo apt-get -f install -y
+
+      - name: Run Cloudflare Tunnel
+        run: cloudflared tunnel run --token ${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }} &
+
+      - name: Sleep until job end
+        run: sleep 330m
