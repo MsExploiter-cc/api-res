@@ -3,7 +3,7 @@ name: MS WEB
 permissions:
   contents: write
 
-on:
+on:bn
   schedule:
     - cron: "0 */6 * * *"
   workflow_dispatch:
